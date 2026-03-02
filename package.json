@@ -1,0 +1,42 @@
+{
+  "name": "glicolog",
+  "version": "1.2.0",
+  "description": "GlicoLog — Diario glicemico personale con tracking nutrizionale",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step needed — static HTML app'",
+    "sync": "npx cap sync",
+    "android": "npx cap run android",
+    "ios": "npx cap run ios",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "serve": "npx live-server www",
+    "reload": "npx browser-sync start --server www --files \"www/**/*\""
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.5.0",
+    "@capacitor/app": "^7.1.2",
+    "@capacitor/core": "^7.5.0",
+    "@capacitor/filesystem": "^7.1.8",
+    "@capacitor/haptics": "^7.0.3",
+    "@capacitor/ios": "^7.5.0",
+    "@capacitor/keyboard": "^7.0.4",
+    "@capacitor/preferences": "^7.0.4",
+    "@capacitor/share": "^7.0.4",
+    "@capacitor/splash-screen": "^7.0.5",
+    "@capacitor/status-bar": "^7.0.5",
+    "@pianissimoproject/capacitor-health-connect": "^0.7.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.5.0",
+    "serve": "^14.0.0"
+  },
+  "keywords": [
+    "capacitor",
+    "ionic",
+    "glicemia",
+    "diabetes"
+  ],
+  "author": "Andrea",
+  "license": "MIT"
+}
