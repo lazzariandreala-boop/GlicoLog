@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:\\\\Users\\\\andrea.lazzari\\\\Downloads\\\\glicolog-capacitor\\\\glicolog-capacitor\\\\android\\\\app\\\\src\\\\main\\\\assets\"\" 2>/dev/null || echo \"No assets dir \")",
+      "Bash(node --check /c/Users/andrea.lazzari/Downloads/glicolog-capacitor/glicolog-capacitor/www/db_crea.js)",
+      "Bash(node -e \":*)",
+      "Bash(find /c/Users/andrea.lazzari/Downloads/glicolog-capacitor/glicolog-capacitor/node_modules/@pianissimoproject/capacitor-health-connect/android -name *.kt)",
+      "Bash(npx live-server:*)",
+      "Bash(find c:/Users/andrea.lazzari/Downloads/glicolog-capacitor/glicolog-capacitor/android/app/src/main/res/ -name splash*)",
+      "Bash(find c:/Users/andrea.lazzari/Downloads/glicolog-capacitor/glicolog-capacitor/node_modules/@pianissimoproject/capacitor-health-connect/android/ -name *.gradle)",
+      "Bash(node -e \"try { require\\(''./www/db_crea.js''\\); console.log\\(''OK''\\); } catch\\(e\\) { console.log\\(''ERROR:'', e.message\\); }\")",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''peerDeps:'''', d.get\\(''''peerDependencies'''',{}\\)\\); print\\(''''deps:'''', d.get\\(''''dependencies'''',{}\\)\\)\")",
+      "Bash(node -e \"const p=require\\(''c:/Users/andrea.lazzari/Downloads/glicolog-capacitor/glicolog-capacitor/node_modules/@pianissimoproject/capacitor-health-connect/package.json''\\); console.log\\(''peer:'', JSON.stringify\\(p.peerDependencies\\)\\); console.log\\(''deps:'', JSON.stringify\\(p.dependencies\\)\\);\")"
+    ]
+  }
+}

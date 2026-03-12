@@ -1,6 +1,6 @@
 {
   "name": "glicolog",
-  "version": "1.2.3",
+  "version": "1.2.5",
   "description": "GlicoLog — Diario glicemico personale con tracking nutrizionale",
   "main": "index.js",
   "scripts": {

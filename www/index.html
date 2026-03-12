@@ -3970,6 +3970,15 @@
   </div>
 
   <!-- ═══════════════════════════════════
+     INSTALL BANNER PWA
+     ═══════════════════════════════════ -->
+  <div class="ibar" id="ibar">
+    <div class="ibar-t"><strong>Installa GlicoLog</strong>Aggiungi l'app alla schermata home per un accesso rapido</div>
+    <button class="ibar-b" onclick="doInstall()">Installa</button>
+    <button class="ibar-x" onclick="document.getElementById('ibar').classList.remove('on')">✕</button>
+  </div>
+
+  <!-- ═══════════════════════════════════
      ALERT BANNERS — glicemia alta/bassa
      ═══════════════════════════════════ -->
   <div class="alert-banner" id="alertHigh">
@@ -4484,6 +4493,13 @@
           style="font-family:var(--mono);font-size:.95rem;color:var(--g)" id="aperiProtTotal">–</span></div>
       <div class="alc-info-row"><span style="font-size:.76rem;color:var(--txt2)">Calorie</span><span
           style="font-family:var(--mono);font-size:.95rem;color:var(--o)" id="aperiKcalTotal">–</span></div>
+    </div>
+    <div class="bolo-box" id="boloBoxAP">
+      <div class="bolo-ico">💉</div>
+      <div class="bolo-body">
+        <div class="bolo-val" id="boloValAP">—</div>
+        <div class="bolo-lbl" id="boloLblAP">Bolo suggerito dai carboidrati</div>
+      </div>
     </div>
     <div class="time-row"><span class="fl">📅 Data &amp; ora</span><input type="date" class="fi date-input"
         id="dAP_d"><input type="time" class="fi time-input" id="tAP_t"><button class="time-now-btn"
@@ -5863,7 +5879,7 @@
     //   - Basale → cfg.insBasale
     // ═══════════════════════════════════════════════════════════════
     // Variabile per ricordare l'azione del popup
-    let _glicCorrMode = null; let _glicCorrCarbs = 15; let _glicCorrVal = 60;
+    let _glicCorrMode = null; let _glicCorrCarbs = 15; let _glicCorrVal = 60; let _glicCorrBoloU = 0;
 
     function showGlicCorrLow(n, cfg) {
       _glicCorrMode = 'spuntino';
@@ -5888,6 +5904,7 @@
     function showGlicCorrHigh(n, cfg) {
       _glicCorrMode = 'insulina';
       const u = roundBoloForIns((n - cfg.targetMax) / cfg.fsi, cfg.insRapida);
+      _glicCorrBoloU = u;
       const card = document.getElementById('glicCorrCard');
       card.style.borderColor = 'rgba(255,82,82,.3)';
       document.getElementById('glicCorrIcon').textContent = '🔴';
@@ -5904,7 +5921,7 @@
 
     function closeGlicCorr() {
       document.getElementById('glicCorrModal').style.display = 'none';
-      _glicCorrMode = null;
+      _glicCorrMode = null; _glicCorrBoloU = 0;
     }
 
     function glicCorrAction() {
@@ -5923,7 +5940,16 @@
         if (boloRow) boloRow.style.display = 'none';
         if (ipoBox) { ipoBox.style.display = 'block'; buildIpoFixBox(carbsN, glicVal); }
       }
-      else if (mode === 'insulina') openPanel('insulina');
+      else if (mode === 'insulina') {
+        const boloU = _glicCorrBoloU;
+        openPanel('insulina');
+        if (boloU > 0) {
+          setTimeout(() => {
+            const iuEl = document.getElementById('iU');
+            if (iuEl) iuEl.value = boloU;
+          }, 250);
+        }
+      }
     }
 
     // IPO FIX BOX — alimenti standard per correzione ipoglicemia
@@ -6181,6 +6207,22 @@
       const aC = document.getElementById('aperiCarbTotal'); if (aC) aC.textContent = Math.round(totC * 10) / 10 + 'g';
       const aP = document.getElementById('aperiProtTotal'); if (aP) aP.textContent = Math.round(totP * 10) / 10 + 'g';
       const aK = document.getElementById('aperiKcalTotal'); if (aK) aK.textContent = Math.round(totK) + ' kcal';
+      // Calcolo bolo suggerito dagli aperitivi
+      {
+        const cfg = ldC();
+        const ic = parseFloat(cfg.ic) || 10;
+        const boloBox = document.getElementById('boloBoxAP');
+        if (totC > 0) {
+          const boloCalc = roundBoloForIns(totC / ic, cfg.insRapida);
+          if (boloBox) boloBox.classList.add('on');
+          const bv = document.getElementById('boloValAP');
+          if (bv) bv.textContent = boloCalc + 'U';
+          const bl = document.getElementById('boloLblAP');
+          if (bl) bl.textContent = Math.round(totC * 10) / 10 + 'g ÷ 1:' + ic + ' = ' + boloCalc + 'U di ' + (cfg.insRapida || 'insulina rapida');
+        } else {
+          if (boloBox) boloBox.classList.remove('on');
+        }
+      }
     }
 
     function openAperitiviDirect() { openPanel('aperitivi'); }
@@ -6210,6 +6252,28 @@
       else data.push(Object.assign({ id: uid(), type: 'aperitivi' }, entry));
       sv(data); closePanel(); renderTL(); renderStrip(); renderNut();
       toast('🥨 Aperitivi salvati — ' + Math.round(totalCarbs * 10) / 10 + 'g carbo');
+      if (!eid && totalCarbs > 0) {
+        const cfg = ldC();
+        const boloCalc = roundBoloForIns(totalCarbs / (parseFloat(cfg.ic) || 10), cfg.insRapida);
+        if (boloCalc > 0) showAperitiviBolo(boloCalc, Math.round(totalCarbs * 10) / 10, cfg);
+      }
+    }
+
+    function showAperitiviBolo(boloCalc, totalCarbs, cfg) {
+      _glicCorrMode = 'insulina';
+      _glicCorrBoloU = boloCalc;
+      const card = document.getElementById('glicCorrCard');
+      card.style.borderColor = 'rgba(206,147,216,.35)';
+      document.getElementById('glicCorrIcon').textContent = '💉';
+      document.getElementById('glicCorrTitle').style.color = 'var(--p)';
+      document.getElementById('glicCorrTitle').textContent = 'Bolo suggerito — ' + boloCalc + 'U';
+      document.getElementById('glicCorrMsg').textContent = 'Gli aperitivi contengono ' + totalCarbs + 'g di carboidrati. Con IC 1:' + (parseFloat(cfg.ic) || 10) + ' il bolo suggerito è ' + boloCalc + 'U di ' + (cfg.insRapida || 'insulina rapida') + '. Vuoi registrarlo adesso?';
+      const btn = document.getElementById('glicCorrYes');
+      btn.textContent = '💉 Registra ' + boloCalc + 'U';
+      btn.style.background = 'rgba(206,147,216,.15)';
+      btn.style.border = '1px solid rgba(206,147,216,.4)';
+      btn.style.color = 'var(--p)';
+      document.getElementById('glicCorrModal').style.display = 'flex';
     }
 
     function savePostM_disabled() {
@@ -6921,12 +6985,12 @@
           card = '<div class="tlr1"><span class="tag ti">' + (e.tipoIns || 'Insulina') + '</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'insulina\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',\'Insulina ' + e.units + 'U\')" title="Elimina">&#x1F5D1;</button></div></div><div class="tvs"><span class="tv ins">' + e.units + 'U</span>' + (e.insulinType ? '<span class="tv" style="color:var(--txt2)">' + e.insulinType + '</span>' : '') + '</div>';
         } else if (e.type === 'sport') {
           const durLbl = e.duration >= 60 ? Math.floor(e.duration / 60) + 'h' + (e.duration % 60 ? e.duration % 60 + 'm' : '') : e.duration + 'min';
-          card = '<div class="tlr1"><span class="tag tsp">Sport</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'sport\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',(e.label||e.sportName||\'Sport\'))" title="Elimina">&#x1F5D1;</button></div></div><div class="tl-food">' + (e.label || e.sportName || 'Sport') + (e.note ? ' · ' + e.note : '') + '</div><div class="tvs"><span class="tv sport">' + durLbl + '</span><span class="tv" style="color:var(--o)">' + e.kcal + ' kcal bruciate</span></div>';
+          card = '<div class="tlr1"><span class="tag tsp">Sport</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'sport\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',\'' + esc(e.label||e.sportName||'Sport') + '\')" title="Elimina">&#x1F5D1;</button></div></div><div class="tl-food">' + (e.label || e.sportName || 'Sport') + (e.note ? ' · ' + e.note : '') + '</div><div class="tvs"><span class="tv sport">' + durLbl + '</span><span class="tv" style="color:var(--o)">' + e.kcal + ' kcal bruciate</span></div>';
         } else if (e.type === 'alcool') {
-          card = '<div class="tlr1"><span class="tag ta">Alcool</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'alcool\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',(e.label||e.alcType||\'Alcool\'))" title="Elimina">&#x1F5D1;&#xFE0F;</button></div></div><div class="tvs"><span class="tv alc">' + (e.label || e.alcType) + (e.qty > 1 ? ' \u00D7' + e.qty : '') + '</span><span class="tv alc">' + e.units + 'U</span><span class="tv" style="color:var(--o)">' + e.kcal + 'kcal</span></div>';
+          card = '<div class="tlr1"><span class="tag ta">Alcool</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'alcool\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',\'' + esc(e.label||e.alcType||'Alcool') + '\')" title="Elimina">&#x1F5D1;&#xFE0F;</button></div></div><div class="tvs"><span class="tv alc">' + (e.label || e.alcType) + (e.qty > 1 ? ' \u00D7' + e.qty : '') + '</span><span class="tv alc">' + e.units + 'U</span><span class="tv" style="color:var(--o)">' + e.kcal + 'kcal</span></div>';
         } else if (e.type === 'aperitivi') {
           const apLabel = e.items ? e.items.map(i => (i.ico || '🥨') + ' ' + i.name).join(', ') : 'Aperitivi';
-          card = '<div class="tlr1"><span class="tag" style="background:rgba(255,171,64,.1);color:var(--o)">🥨 Aperitivi</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'aperitivi\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',(e.items?e.items[0].name:\'Aperitivi\'))" title="Elimina">&#x1F5D1;&#xFE0F;</button></div></div><div class="tl-food">' + apLabel + '</div><div class="tvs"><span class="tv fc" style="color:var(--b)">' + e.totalCarbs + 'g carbo</span><span class="tv" style="color:var(--o)">' + e.totalKcal + ' kcal</span></div>';
+          card = '<div class="tlr1"><span class="tag" style="background:rgba(255,171,64,.1);color:var(--o)">🥨 Aperitivi</span><div style="display:flex;gap:2px"><button class="teb" onclick="event.stopPropagation();openPanel(\'aperitivi\',' + es + ')">&#x270F;&#xFE0F;</button><button class="teb-del" onclick="event.stopPropagation();askDel(\'' + e.id + '\',\'' + esc(e.items?e.items[0].name:'Aperitivi') + '\')" title="Elimina">&#x1F5D1;&#xFE0F;</button></div></div><div class="tl-food">' + apLabel + '</div><div class="tvs"><span class="tv fc" style="color:var(--b)">' + e.totalCarbs + 'g carbo</span><span class="tv" style="color:var(--o)">' + e.totalKcal + ' kcal</span></div>';
         }
         const click = '';
         return '<div class="tli"><div class="tls"><div class="tl-t">' + fmtT(e.ts) + '</div><div class="tl-d" style="background:' + (dc[e.type] || '#666') + '"></div>' + (!last ? '<div class="tl-v"></div>' : '') + '</div><div class="tlc-wrap" data-eid="' + e.id + '" data-label="' + esc(e.food || e.value || e.tipo || e.tipoIns || e.label || e.alcType || e.sportName || e.type || 'voce').substring(0, 30) + '"><div class="tlc-del-bg">&#x1F5D1;&#xFE0F;</div><div class="tlc" ' + click + '>' + card + '</div></div></div>';
