@@ -1,4 +1,4 @@
-const CACHE = 'glicolog-v25';
+const CACHE = 'glicolog-v28';
 const ASSETS = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {
